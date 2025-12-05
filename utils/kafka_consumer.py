@@ -68,4 +68,19 @@ class ConfluentConsumer():
 
     def msg_process(self,msg):
         dict = json.loads(msg.value())
+        self.redis(msg.value())
         self.logger.logger.info("{}".format(dict))
+
+
+    
+    def redis(self,msg):
+        import redis
+        r = redis.Redis(
+            host="redis",     # container name on devnet
+            port=6379,
+            password="ChangeMe123!",  # same as in podman run
+            decode_responses=True,
+        )
+
+        r.set("msg",msg)
+        print(r.get("msg"))
