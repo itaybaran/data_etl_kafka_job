@@ -2,7 +2,7 @@ import decimal
 import datetime
 import time
 import copy
-from flink_steps.flink_step import FlinkStep, StepError
+from data_steps.flink_step import FlinkStep, StepError
 
 
 class DataExtractor(FlinkStep):

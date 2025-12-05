@@ -1,7 +1,7 @@
 import datetime
 import xml.etree.ElementTree as ET
 import copy
-from flink_steps.flink_step import FlinkStep, StepError
+from data_steps.flink_step import FlinkStep, StepError
 
 
 class HL7ParserError(StepError):
@@ -47,7 +47,7 @@ class Hl7_input(FlinkStep):
             error_attrib["msg"] = "HL7ParserError Error {}".format(str(e))
             error_attrib["error_type"] = "HL7ParserError"
             error_attrib["error_code"] = self.logger.get_error_code(error_attrib["error_type"])
-            error_attrib["error_message"] = "error message:{}, error type:{},error code:{},payload:{}".format(str(e),error_attrib["error_type"],error_attrib["error_code"],payload)
+            error_attrib["error_message"] = "error message:{}, error type:{},error code:{},payload:{}".format(str(e),error_attrib["error_type"],error_attrib["error_code"],"")
             self.msg = error_attrib
                     
     

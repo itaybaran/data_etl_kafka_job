@@ -1,7 +1,5 @@
-import datetime
-import copy
-from flink_steps.flink_step import FlinkStep, StepError
-
+from data_steps.flink_step import FlinkStep, StepError
+from data_steps.validator import ValidatorError
 
 class OperatorError(StepError):
     def __init__(self, description):
@@ -58,7 +56,7 @@ class Operator(FlinkStep):
             elif operator == 'fex':
                 return (isinstance( left, str),"field {} must be a part of the message".format(left))
             else:
-                raise validatorError("validate_operator Error Operator is not valid")
+                raise ValidatorError("validate_operator Error Operator is not valid")
         except AssertionError as e:
             raise AssertionError(e)
         except Exception as e:

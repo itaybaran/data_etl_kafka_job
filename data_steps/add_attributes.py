@@ -2,7 +2,7 @@ import datetime
 import uuid
 import copy
 from utils.operator import Operator, OperatorError
-from flink_steps.flink_step import FlinkStep, StepError
+from data_steps.flink_step import FlinkStep, StepError
 
 
 class AddAttributes(FlinkStep):

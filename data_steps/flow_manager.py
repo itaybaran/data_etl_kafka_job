@@ -6,6 +6,7 @@ from filter import Filter
 from enrich import Enrich
 from explode import Explode
 from add_attributes import AddAttributes
+from bind import Bind
 
 class FlowManagerError:
     def __init__(self, description):
@@ -54,6 +55,8 @@ class FlowManager:
             return Explode(config=self.config, logger=self.logger,step_order=step_order)
         elif str(step_name).lower() == "add_attributes":
             return AddAttributes(config=self.config, logger=self.logger,step_order=step_order)
+        elif str(step_name).lower() == "bind":
+            return Bind(config=self.config, logger=self.logger,step_order=step_order)
 
     def execute_flow(self,data,payload):
         res = True

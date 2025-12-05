@@ -1,8 +1,11 @@
-import datetime
-import copy
-from utils.operator import Operator, OperatorError
-from flink_steps.flink_step import FlinkStep, StepError
 
+import copy
+from data_steps.flink_step import FlinkStep, StepError
+
+class ExplodeError(StepError):
+    def __init__(self, description):
+        super().__init__()
+        self.msg = description
 
 class Explode(FlinkStep):
     def __init__(self,config,logger,step_order):

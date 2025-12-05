@@ -1,20 +1,12 @@
 # utils/flink_main.py
 
 import os
-import json
-import socket
-import hashlib
-import uuid
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
-from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from configuration import Config
 from logger import Logger
 from kafka_producer import ConfluentProducer
 from kafka_consumer import ConfluentConsumer
-import json
-import yaml
 import os
 
 def set_from_env():

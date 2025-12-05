@@ -1,8 +1,12 @@
 import datetime
 import copy
 from utils.operator import Operator, OperatorError
-from flink_steps.flink_step import FlinkStep, StepError
+from data_steps.flink_step import FlinkStep, StepError
 
+class ValidatorError(StepError):
+    def __init__(self, description):
+        super().__init__()
+        self.msg = description
 
 class Validator(FlinkStep):
     def __init__(self,config,logger,step_order):
