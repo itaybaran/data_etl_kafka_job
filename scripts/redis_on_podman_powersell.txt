@@ -1,0 +1,14 @@
+$newPath = "$HOME\podman\redis-data"
+$newPath   # just to verify
+
+podman network create devnet 2>$null
+
+podman rm -f redis 2>$null
+
+# Local data dir for Redis
+$newPath = "$HOME\podman\redis-data"
+New-Item -ItemType Directory -Force -Path $newPath | Out-Null
+
+podman run -d --name redis -h redis --restart unless-stopped --network devnet -p 6379:6379 -v ${newPath}:/data redis:7-alpine redis-server --appendonly yes --requirepass "ChangeMe123!"
+
+podman logs -f redis --tail=200

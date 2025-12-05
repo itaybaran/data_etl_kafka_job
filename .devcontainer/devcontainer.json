@@ -1,31 +1,40 @@
 {
   "name": "PyFlink Dev (Podman)",
-  "build": { "dockerfile": "Dockerfile", "context": "." },
+
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
 
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-  "settings": {
-    "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
-  },
-  "containerEnv": {
-    "WAYLAND_DISPLAY": "",
-    "DISPLAY": ""
-  },
   "customizations": {
     "vscode": {
-      "extensions": ["ms-python.python","ms-python.vscode-pylance","ms-toolsai.jupyter"]
+        // VS Code settings inside the container
+      "settings": {
+        "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter"
+      ]
     }
   },
-  // ...your existing fields...
-  "settings": { "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python" },
+
+  // Environment variables inside container
   "containerEnv": {
     "PYFLINK_CLIENT_EXECUTABLE": "",
-    "PYFLINK_EXECUTABLE": "/home/vscode/.venv/bin/python"
-  },
-  "runArgs": ["--network", "devnet"],
-  "postCreateCommand": "/usr/bin/env bash -lc 'python3 -m venv /home/vscode/.venv && /home/vscode/.venv/bin/python -m pip install -U pip && /home/vscode/.venv/bin/pip install --no-cache-dir -r ${containerWorkspaceFolder}/requirements.txt'",
-  "containerEnv": {
+    "PYFLINK_EXECUTABLE": "/home/vscode/.venv/bin/python",
     "WAYLAND_DISPLAY": "",
     "DISPLAY": ""
-  }
+  },
+
+  // Important: attach devcontainer to same network as Kafka/Redis
+  "runArgs": [
+    "--network", "devnet"
+  ],
+
+  // Create venv, upgrade pip, install requirements
+  "postCreateCommand": "/usr/bin/env bash -lc 'python3 -m venv /home/vscode/.venv && /home/vscode/.venv/bin/python -m pip install -U pip && /home/vscode/.venv/bin/pip install --no-cache-dir -r ${containerWorkspaceFolder}/requirements.txt'"
 }
