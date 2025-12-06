@@ -1,7 +1,5 @@
 #!Execute Tableau API for retrieving data , manipulating and automating tasks
-import time
-from configuration import Config
-from configuration_error import ConfigurationError
+from utils.configuration_error import ConfigurationError
 from confluent_kafka import Consumer , KafkaError , KafkaException
 import socket
 import json
@@ -12,11 +10,11 @@ class ConfluentConsumer():
     def __init__(self, config, logger):
         try:
             self.logger = logger
-            self.config = config
+            self.config = config["env_config"]
             self.document_counter = 0
-            self.kafka_client_topic_names = self.config["kafka"]["INPUT_TOPICS"]
-            self.group_id = self.config["kafka"]["GROUP_ID"]
-            self.bootstrap  = self.config["kafka"]["BOOTSTRAP"]
+            self.kafka_client_topics = self.config["INPUT_TOPICS"]
+            self.group_id = self.config["GROUP_ID"]
+            self.bootstrap  = self.config["BOOTSTRAP"]
             self.consumer = self.connect()
         except Exception as e:
             err_dict = {}
@@ -39,7 +37,7 @@ class ConfluentConsumer():
         return conf
 
     def consume(self):
-        self.basic_consume_loop(self.consumer,self.config["kafka"]["INPUT_TOPICS"])
+        self.basic_consume_loop(self.consumer,self.kafka_client_topics)
 
     def basic_consume_loop(self, consumer, topics):
         try:
@@ -49,7 +47,6 @@ class ConfluentConsumer():
             while running:
                 msg = consumer.poll(timeout=1.0)
                 if msg is None: continue
-
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         # End of partition event
@@ -67,8 +64,15 @@ class ConfluentConsumer():
         running = False
 
     def msg_process(self,msg):
+        metadata = {
+                "topic": msg.topic(),
+                "partition": msg.partition(),
+                "offset": msg.offset(),
+                "timestamp": msg.timestamp()[1],  # msg.timestamp() -> (type, ts)
+            }
         dict = json.loads(msg.value())
-        self.redis(msg.value())
+        dict["metadata"]=metadata
+        self.redis(json.dumps(dict))
         self.logger.logger.info("{}".format(dict))
 
 

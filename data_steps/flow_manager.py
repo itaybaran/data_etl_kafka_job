@@ -1,12 +1,12 @@
-from flink_step import FlinkStep
-from data_extractor import DataExtractor 
-from hl7_parser import HL7Parser
-from validator import Validator
-from filter import Filter
-from enrich import Enrich
-from explode import Explode
-from add_attributes import AddAttributes
-from bind import Bind
+from data_steps.flink_step import FlinkStep
+from data_steps.data_extractor import DataExtractor 
+from data_steps.hl7_parser import HL7Parser
+from data_steps.validator import Validator
+from data_steps.filter import Filter
+from data_steps.enrich import Enrich
+from data_steps.explode import Explode
+from data_steps.add_attributes import AddAttributes
+from data_steps.bind import Bind
 
 class FlowManagerError:
     def __init__(self, description):
@@ -15,7 +15,7 @@ class FlowManagerError:
 
 class FlowManager:
     def __init__(self,config, logger):
-        self.config = config
+        self.config = config["main_config"]
         self.logger = logger
         self.steps = []
         self.create_flow()

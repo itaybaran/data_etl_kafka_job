@@ -2,12 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run main.py",
+      "name": "Run utils.main",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/utils/main.py",
-      "console": "integratedTerminal",
-      "env": { "PYTHONUNBUFFERED": "1" }
+
+      // ✨ IMPORTANT: run as module, not script file
+      "module": "utils.main",
+
+      // make sure cwd is the project root
+      "cwd": "${workspaceFolder}",
+
+      // extra safety: ensure project root is on PYTHONPATH
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+
+      "justMyCode": true
     }
   ]
 }

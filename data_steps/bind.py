@@ -1,7 +1,7 @@
 import datetime
 import copy
 from utils.operator import Operator, OperatorError
-from flink_step import FlinkStep, StepError
+from data_steps.flink_step import FlinkStep, StepError
 
 
 class BindError(StepError):
@@ -13,13 +13,11 @@ class BindError(StepError):
 class Bind(FlinkStep):
     def __init__(self,config,logger,step_order):
         super().__init__(config,logger,step_order)
-        self.bind_instructions = self.step_config["instuctions"]
 
     def executer(self,message,payload):
         res = True
         try:
             parsed_msg = copy.copy(message)
-            parsed_msg[self.field_name] = Operator.calculate_token(self.enrich_instructions,parsed_msg)
             self.current_messages.append(parsed_msg)
         except OperatorError as e:
             res = False

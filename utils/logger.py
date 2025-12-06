@@ -3,8 +3,7 @@ import time
 import os
 import uuid
 import json
-from kafka_producer import ConfluentProducer
-from dotenv import load_dotenv, find_dotenv
+from utils.kafka_producer import ConfluentProducer
 
 class Logger:
     def __init__(self):

@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "data-pipe-enriched"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+[tool.hatch.build.targets.wheel]
+# tell hatchling exactly which packages to include
+packages = ["data_steps", "utils"]

@@ -8,7 +8,7 @@ from data_steps.flink_step import FlinkStep, StepError
 class AddAttributes(FlinkStep):
     def __init__(self,config,logger,step_order):
         super().__init__(config,logger,step_order)
-        self.add_attributes_instructions = self.step_config["instuctions"]
+        self.add_attributes_instructions = self.step_config["instructions"]
 
     def executer(self,message,payload):
         res = True

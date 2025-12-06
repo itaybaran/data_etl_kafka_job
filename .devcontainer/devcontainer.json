@@ -24,10 +24,7 @@
 
   // Environment variables inside container
   "containerEnv": {
-    "PYFLINK_CLIENT_EXECUTABLE": "",
-    "PYFLINK_EXECUTABLE": "/home/vscode/.venv/bin/python",
-    "WAYLAND_DISPLAY": "",
-    "DISPLAY": ""
+    "PYTHONPATH": "/workspaces/${localWorkspaceFolderBasename}"
   },
 
   // Important: attach devcontainer to same network as Kafka/Redis
