@@ -37,7 +37,6 @@ def main():
     try:
         logger = Logger()
         logger.insert_debug_to_log("main","enter function")
-        fm = FlowManager(data_config,logger)
         consumer = ConfluentConsumer(data_config,logger)
         consumer.consume()
         

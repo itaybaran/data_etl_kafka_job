@@ -1,0 +1,10 @@
+# Consume
+podman exec -it kafka bash -lc "kafka-console-consumer --bootstrap-server localhost:9092 --topic prd.hmo1.db2.clinical.LAB_TEST --from-beginning --max-messages 100"
+
+
+# List Topics
+podman exec -it kafka bash -lc "kafka-topics --bootstrap-server kafka:9092 --list"
+# Create Topic
+podman exec -it kafka bash -lc "kafka-topics --bootstrap-server localhost:9092 --create --topic prd.hmo1.db2.clinical.LAB_TEST --partitions 1 --replication-factor 1"  
+# Delete Topic
+podman exec -it kafka bash -lc "kafka-topics --bootstrap-server localhost:9092 --topic prd.hmo1.db2.clinical.LAB_TEST --delete" 

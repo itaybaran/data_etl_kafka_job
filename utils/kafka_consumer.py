@@ -1,5 +1,6 @@
 #!Execute Tableau API for retrieving data , manipulating and automating tasks
 from utils.configuration_error import ConfigurationError
+from utils.state_manager import StateManager
 from confluent_kafka import Consumer , KafkaError , KafkaException
 import socket
 import json
@@ -15,6 +16,7 @@ class ConfluentConsumer():
             self.kafka_client_topics = self.config["INPUT_TOPICS"]
             self.group_id = self.config["GROUP_ID"]
             self.bootstrap  = self.config["BOOTSTRAP"]
+            self.state = StateManager(config,self.logger)
             self.consumer = self.connect()
         except Exception as e:
             err_dict = {}
@@ -72,19 +74,5 @@ class ConfluentConsumer():
             }
         dict = json.loads(msg.value())
         dict["metadata"]=metadata
-        self.redis(json.dumps(dict))
+        self.state.set(dict)
         self.logger.logger.info("{}".format(dict))
-
-
-    
-    def redis(self,msg):
-        import redis
-        r = redis.Redis(
-            host="redis",     # container name on devnet
-            port=6379,
-            password="ChangeMe123!",  # same as in podman run
-            decode_responses=True,
-        )
-
-        r.set("msg",msg)
-        print(r.get("msg"))
