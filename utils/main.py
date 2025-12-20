@@ -5,7 +5,6 @@ from utils.configuration import Config
 from utils.logger import Logger
 from utils.kafka_producer import ConfluentProducer
 from utils.kafka_consumer import ConfluentConsumer
-from data_steps.flow_manager import FlowManager
 
 def set_from_env():
     env_config = {}
@@ -43,7 +42,7 @@ def main():
         logger.insert_debug_to_log("main","execute data_etl_kafka_job")
         logger.insert_debug_to_log("main","end function")
     except Exception as e:
-        logger.insert_error_to_log(-101,"Flink Environment issue:{}".format(str(e)))
+        logger.insert_error_to_log(-101,"Environment issue:{}".format(str(e)))
 
 
 # Execute

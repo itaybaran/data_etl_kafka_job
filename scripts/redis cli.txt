@@ -1,0 +1,13 @@
+podman exec -it redis redis-cli
+
+# auth
+AUTH ChangeMe123!
+
+# scan
+SCAN 0 MATCH user:* COUNT 100
+
+# get
+GET user:100
+
+# set
+SET user:100 name "Itay"

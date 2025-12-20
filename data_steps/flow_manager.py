@@ -1,4 +1,4 @@
-from data_steps.flink_step import FlinkStep
+#from utils.state_manager import StateManager
 from data_steps.data_extractor import DataExtractor 
 from data_steps.hl7_parser import HL7Parser
 from data_steps.validator import Validator
@@ -7,6 +7,7 @@ from data_steps.enrich import Enrich
 from data_steps.explode import Explode
 from data_steps.add_attributes import AddAttributes
 from data_steps.bind import Bind
+from data_steps.produce import Produce
 
 class FlowManagerError:
     def __init__(self, description):
@@ -16,6 +17,7 @@ class FlowManagerError:
 class FlowManager:
     def __init__(self,config, logger):
         self.config = config["main_config"]
+        self.env_config = config["env_config"]
         self.logger = logger
         self.steps = []
         self.create_flow()
@@ -33,6 +35,7 @@ class FlowManager:
     
     def create_flow(self):
         steps_config = self.config["flow_manager"]
+        steps_config.sort(key=lambda x: x["order"])
         for step_conf in steps_config:
             if step_conf["is_active"]:
                 step = self.create_step(step_conf["name"],step_conf["order"])
@@ -56,7 +59,9 @@ class FlowManager:
         elif str(step_name).lower() == "add_attributes":
             return AddAttributes(config=self.config, logger=self.logger,step_order=step_order)
         elif str(step_name).lower() == "bind":
-            return Bind(config=self.config, logger=self.logger,step_order=step_order)
+            return Bind(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order)
+        elif str(step_name).lower() == "produce":
+            return Produce(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order)
 
     def execute_flow(self,data,payload):
         res = True
@@ -69,13 +74,13 @@ class FlowManager:
                 if res:
                     res = step.execute(self.msg,payload)
                     if not res:
-                        self.msg = step.error_attrib 
+                        #self.msg = step.error_attrib 
                         return res
                     self.msg = step.msg
             else:
                 res = step.execute(self.msg,payload)
                 if not res:
-                    self.msg = step.error_attrib 
+                    #self.msg = step.error_attrib 
                     return res
                 self.msg = step.msg
         return res

@@ -1,7 +1,7 @@
 #!Execute Tableau API for retrieving data , manipulating and automating tasks
 from utils.configuration_error import ConfigurationError
-from utils.state_manager import StateManager
 from confluent_kafka import Consumer , KafkaError , KafkaException
+from data_steps.flow_manager import FlowManager
 import socket
 import json
 import sys
@@ -9,21 +9,14 @@ import sys
 
 class ConfluentConsumer():
     def __init__(self, config, logger):
-        try:
-            self.logger = logger
-            self.config = config["env_config"]
-            self.document_counter = 0
-            self.kafka_client_topics = self.config["INPUT_TOPICS"]
-            self.group_id = self.config["GROUP_ID"]
-            self.bootstrap  = self.config["BOOTSTRAP"]
-            self.state = StateManager(config,self.logger)
-            self.consumer = self.connect()
-        except Exception as e:
-            err_dict = {}
-            err_dict["error_code"] = ""
-            err_dict["error_type"] = ""
-            err_dict["error_msg"] = str(e)
-            self.logger.logger.error("{}".format(json.dumps(err_dict, sort_keys=True)))
+        self.logger = logger
+        self.config = config["env_config"]
+        self.document_counter = 0
+        self.kafka_client_topics = self.config["INPUT_TOPICS"]
+        self.group_id = self.config["GROUP_ID"]
+        self.bootstrap  = self.config["BOOTSTRAP"]
+        self.consumer = self.connect()
+        self.fm = FlowManager(config, logger)
 
     def connect(self):
         try:
@@ -74,5 +67,4 @@ class ConfluentConsumer():
             }
         dict = json.loads(msg.value())
         dict["metadata"]=metadata
-        self.state.set(dict)
-        self.logger.logger.info("{}".format(dict))
+        self.fm.execute_flow(dict,dict)
