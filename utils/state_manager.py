@@ -30,6 +30,8 @@ class StateManager():
     def bind_entity(self,message):
         res = False
         try:
+            self.current_message = {}
+            self.root_message = {}
             self.save_key(message)
             topic = message["metadata"]["topic"]
             self.seperator = self.main_config["seperator"]
@@ -46,6 +48,8 @@ class StateManager():
             if bind_ready:
                 self.combine_message(message=self.root_message,direction=-1,flag=True)
                 bind_ready = self.is_bind_ready()
+                if bind_ready:
+                    self.tag_sent_messages()
             return bind_ready
 
         except StateError as e:
@@ -82,8 +86,21 @@ class StateManager():
     def is_bind_ready(self):
         try:
             for part in self.main_config["parts"]:
-                if not isinstance(self.current_message[part["name"]],dict):
+                if not part["name"] in self.current_message:
                     return False
+            return True
+        except StateError as e:
+            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
+        except Exception as e:
+            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e))) 
+
+    def tag_sent_messages(self):
+        try:
+            parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
+            for part in parts:
+                msg = self.current_message[part["name"]]
+                msg["metadata"]["sent"] = True
+                self.save_key(msg)
             return True
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
@@ -135,41 +152,42 @@ class StateManager():
         self.entity_name = ""
         self.seperator = ""
         try:
-            topic = message["metadata"]["topic"]
-            self.seperator = self.main_config["seperator"]
-            parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
-            part = parts[0]
-            name =  part["name"]
-            level = part["bind_info"]["level"]
-            self.current_message[name] = message
-            if flag:
-                if level == 1 and direction==1:
-                    self.root_message = message
-                    self.combine_message(message=message,direction=direction,flag=False)
-                key = part["key_field"]
-                key = self.find_key(message,key,self.seperator)
-                parent_key = part["bind_info"]["key_field"]
-                parent_key = self.find_key(message,parent_key,self.seperator)
-                parts= self.find_related_topic(part=part,direction=direction)
-                for part in parts:
-                    level = part["bind_info"]["level"]
-                    fragments = ["None"] * 3
-                    fragments[0] = part["topic"]
-                    if direction == -1: # look for child node
-                        fragments[1] = key
-                        fragments[2] = "*"
-                    elif direction == 1: # look for parent node
-                        fragments[1] = "*"
-                        fragments[2] = parent_key
-                    search_patern = self.get_patern(fragments=fragments)
-                    cur_flag = False # set flag to Flase in case there are no needed relatives
-                    for key_exists in self.state.scan_iter(match=search_patern, count=100):
-                        cur_flag = True # set flag to True after finding relatives
-                        entity = self.state.get(key_exists)
-                        message = json.loads(entity)
-                        self.combine_message(message=message,direction=direction,flag=flag)
-                    if not cur_flag:
+            if not message["metadata"]["sent"]:
+                topic = message["metadata"]["topic"]
+                self.seperator = self.main_config["seperator"]
+                parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
+                part = parts[0]
+                name =  part["name"]
+                level = part["bind_info"]["level"]
+                self.current_message[name] = message
+                if flag:
+                    if level == 1 and direction==1:
+                        self.root_message = message
                         self.combine_message(message=message,direction=direction,flag=False)
+                    key = part["key_field"]
+                    key = self.find_key(message,key,self.seperator)
+                    parent_key = part["bind_info"]["key_field"]
+                    parent_key = self.find_key(message,parent_key,self.seperator)
+                    parts= self.find_related_topic(part=part,direction=direction)
+                    for part in parts:
+                        level = part["bind_info"]["level"]
+                        fragments = ["None"] * 3
+                        fragments[0] = part["topic"]
+                        if direction == -1: # look for child node
+                            fragments[1] = key
+                            fragments[2] = "*"
+                        elif direction == 1: # look for parent node
+                            fragments[1] = "*"
+                            fragments[2] = parent_key
+                        search_patern = self.get_patern(fragments=fragments)
+                        cur_flag = False # set flag to Flase in case there are no needed relatives
+                        for key_exists in self.state.scan_iter(match=search_patern, count=100):
+                            cur_flag = True # set flag to True after finding relatives
+                            entity = self.state.get(key_exists)
+                            message = json.loads(entity)
+                            self.combine_message(message=message,direction=direction,flag=flag)
+                        if not cur_flag:
+                            self.combine_message(message=message,direction=direction,flag=False)
 
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in combine_message method, issue:{}".format(str(e)))

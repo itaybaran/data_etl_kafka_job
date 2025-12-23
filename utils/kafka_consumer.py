@@ -64,6 +64,7 @@ class ConfluentConsumer():
                 "partition": msg.partition(),
                 "offset": msg.offset(),
                 "timestamp": msg.timestamp()[1],  # msg.timestamp() -> (type, ts)
+                "sent": False
             }
         dict = json.loads(msg.value())
         dict["metadata"]=metadata
