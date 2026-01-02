@@ -25,9 +25,13 @@ class ConfluentConsumer():
             raise ConfigurationError(str(e))
 
     def sasl_conf(self):
+        if self.config["START_READING_FROM_EARLIEST"]=="true": 
+            reset = "earliest" 
+        else: 
+            reset = "latest" 
         conf = {}
         conf = {'bootstrap.servers': self.bootstrap, 'group.id': self.group_id, 'session.timeout.ms': 6000,
-                'auto.offset.reset': 'earliest', 'enable.auto.offset.store': False}
+                'auto.offset.reset': reset, 'enable.auto.offset.store': False}
         conf['client.id'] = socket.gethostname()
         return conf
 

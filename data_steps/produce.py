@@ -23,7 +23,6 @@ class Produce(FlinkStep):
         res = True
         try:
             self.poducer.send(message)
-            self.logger.logger.debug("Bind.executer, msg:{}".format(self.state.current_message))
             self.current_messages.append(self.state.current_message)
         except ProduceError as e:
             res = False

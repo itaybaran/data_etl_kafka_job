@@ -48,15 +48,16 @@ class Logger:
         self.log_error['attribute_data']['error_code'] = errorCode
         self.log_error['attribute_data']['error_type'] = errorType
         self.log_error['attribute_data']['err_msg'] = errMsg
-        self.logger.error(str(self.log_error))
-        self.error_poducer.send(self.log_error)
+        if self.logger.level <= logging.ERROR:
+            self.logger.error(str(self.log_error))
+            self.error_poducer.send(self.log_error)
 
     def insert_info_to_log(self, function_name, msg):
         self.log_information['search_fields']['batch_id'] = self.batch_id
         self.log_information['search_fields']['function_name'] = function_name
         self.log_information['attribute_data']['msg'] = msg
-        self.logger.info((self.log_information))
         if self.logger.level <= logging.INFO:
+            self.logger.info((self.log_information))
             self.audit_poducer.send(self.log_information)
 
 
@@ -64,8 +65,8 @@ class Logger:
         self.log_debug['search_fields']['batch_id'] = self.batch_id
         self.log_debug['search_fields']['function_name'] = function_name
         self.log_debug['attribute_data']['msg'] = msg
-        self.logger.debug(str(self.log_debug))
-        if self.logger.level <= logging.INFO:
+        if self.logger.level <= logging.DEBUG:
+            self.logger.debug(str(self.log_debug))
             self.audit_poducer.send(self.log_debug)
 
     def format_json(self, log_dict):

@@ -18,6 +18,7 @@ class StateManager():
         self.key = None
         self.seperator = ""
         self.root_message = {}
+        self.incoming_message = {}
         self.current_message = {}
         self.state = redis.Redis(
             host=env_config["REDIS_HOST"],     # container name on devnet
@@ -30,6 +31,7 @@ class StateManager():
     def bind_entity(self,message):
         res = False
         try:
+            self.incoming_message = message
             self.current_message = {}
             self.root_message = {}
             self.save_key(message)
@@ -43,10 +45,10 @@ class StateManager():
                 self.root_message = message
                 bind_ready=True
             elif level>1:
-                self.combine_message(message=message,direction=1,flag=True)
+                self.combine_message(message=message,direction=1,recurse_level=1,flag=True)
                 bind_ready = self.root_message != {}
             if bind_ready:
-                self.combine_message(message=self.root_message,direction=-1,flag=True)
+                self.combine_message(message=self.root_message,direction=-1,recurse_level=1,flag=True)
                 bind_ready = self.is_bind_ready()
                 if bind_ready:
                     self.tag_sent_messages()
@@ -145,25 +147,30 @@ class StateManager():
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in find_related_topic method, issue:{}".format(str(e)))
 
-    def combine_message(self,message,direction,flag):
+    def combine_message(self,message,direction,recurse_level,flag):
         # direction=1 will look for parent node, direction=-1 will look for child node
         res = None
         self.key = None
         self.entity_name = ""
         self.seperator = ""
         try:
-            if not message["metadata"]["sent"]:
-                topic = message["metadata"]["topic"]
-                self.seperator = self.main_config["seperator"]
-                parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
-                part = parts[0]
-                name =  part["name"]
-                level = part["bind_info"]["level"]
+            topic = message["metadata"]["topic"]
+            self.seperator = self.main_config["seperator"]
+            parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
+            part = parts[0]
+            name =  part["name"]
+            level = part["bind_info"]["level"]
+            self.logger.insert_debug_to_log("combine_message","incoming message topic:{}, recurse level:{}".format(part["topic"],recurse_level))
+            incoming_topic = self.incoming_message["metadata"]["topic"]
+            if incoming_topic==topic:
+                self.current_message[name] = self.incoming_message
+            else:
                 self.current_message[name] = message
+            if not message["metadata"]["sent"]:
                 if flag:
                     if level == 1 and direction==1:
                         self.root_message = message
-                        self.combine_message(message=message,direction=direction,flag=False)
+                        self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=False)
                     key = part["key_field"]
                     key = self.find_key(message,key,self.seperator)
                     parent_key = part["bind_info"]["key_field"]
@@ -185,9 +192,10 @@ class StateManager():
                             cur_flag = True # set flag to True after finding relatives
                             entity = self.state.get(key_exists)
                             message = json.loads(entity)
-                            self.combine_message(message=message,direction=direction,flag=flag)
+                            self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=flag)
                         if not cur_flag:
-                            self.combine_message(message=message,direction=direction,flag=False)
+                            self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=False)
+
 
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in combine_message method, issue:{}".format(str(e)))
