@@ -35,7 +35,7 @@ class StateManager():
             self.current_message = {}
             self.root_message = {}
             self.save_key(message)
-            topic = message["metadata"]["topic"]
+            topic = message["metadata.topic"]
             self.seperator = self.main_config["seperator"]
             parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
             part = parts[0]
@@ -62,13 +62,13 @@ class StateManager():
     def save_key(self,message):
         res = True
         try:
-            topic = message["metadata"]["topic"]
+            topic = message["metadata.topic"]
             self.seperator = self.main_config["seperator"]
             parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
             part = parts[0]
             key = part["key_field"]
             key = self.find_key(message,key,self.seperator)
-            parent_key = part["bind_info"]["key_field"]
+            parent_key = part["bind_info"]["parent_key_field"]
             parent_key = self.find_key(message,parent_key,self.seperator)
             fragments = ["None"] * 3
             fragments[0] = topic
@@ -101,7 +101,7 @@ class StateManager():
             parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
             for part in parts:
                 msg = self.current_message[part["name"]]
-                msg["metadata"]["sent"] = True
+                msg["metadata.sent"] = True
                 self.save_key(msg)
             return True
         except StateError as e:
@@ -154,26 +154,26 @@ class StateManager():
         self.entity_name = ""
         self.seperator = ""
         try:
-            topic = message["metadata"]["topic"]
+            topic = message["metadata.topic"]
             self.seperator = self.main_config["seperator"]
             parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
             part = parts[0]
             name =  part["name"]
             level = part["bind_info"]["level"]
             self.logger.insert_debug_to_log("combine_message","incoming message topic:{}, recurse level:{}".format(part["topic"],recurse_level))
-            incoming_topic = self.incoming_message["metadata"]["topic"]
+            incoming_topic = self.incoming_message["metadata.topic"]
             if incoming_topic==topic:
                 self.current_message[name] = self.incoming_message
             else:
                 self.current_message[name] = message
-            if not message["metadata"]["sent"]:
+            if not message["metadata.sent"]:
                 if flag:
                     if level == 1 and direction==1:
                         self.root_message = message
                         self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=False)
                     key = part["key_field"]
                     key = self.find_key(message,key,self.seperator)
-                    parent_key = part["bind_info"]["key_field"]
+                    parent_key = part["bind_info"]["parent_key_field"]
                     parent_key = self.find_key(message,parent_key,self.seperator)
                     parts= self.find_related_topic(part=part,direction=direction)
                     for part in parts:

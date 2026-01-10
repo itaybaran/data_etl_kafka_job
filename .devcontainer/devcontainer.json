@@ -1,5 +1,5 @@
 {
-  "name": "PyFlink Dev (Podman)",
+  "name": "data_etl_kafka_job Dev (Runs on Podman)",
 
   "build": {
     "dockerfile": "Dockerfile",

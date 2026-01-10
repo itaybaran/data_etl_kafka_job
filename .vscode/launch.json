@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Run utils.main",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
 
       // ✨ IMPORTANT: run as module, not script file
