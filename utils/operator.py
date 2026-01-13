@@ -1,4 +1,4 @@
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 from utils.configuration_error import ConfigurationError
 
 class OperatorError(StepError):
@@ -7,7 +7,7 @@ class OperatorError(StepError):
         self.msg = description
 
 
-class Operator(FlinkStep):
+class Operator:
     @classmethod
     def validate_token(self,token,message):
         try:

@@ -2,12 +2,12 @@ import decimal
 import datetime
 import time
 import copy
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 
 
-class DataExtractor(FlinkStep):
-    def __init__(self, config, logger,step_order):
-        super().__init__(config,logger,step_order)
+class Parsing(BaseStep):
+    def __init__(self, config, logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self._data_description = None
         self._cols_pos = {}
         self.values_dict = {}
@@ -27,8 +27,8 @@ class DataExtractor(FlinkStep):
         except Exception as e:
             res = False
             error_attrib = {}
-            error_attrib["msg"] = "DataExtractor Error {}".format(str(e))
-            error_attrib["error_type"] = "DataExtractor"
+            error_attrib["msg"] = "parsing Error {}".format(str(e))
+            error_attrib["error_type"] = "parsing"
             error_attrib["error_code"] = self.logger.get_error_code(error_attrib["error_type"])
             error_attrib["error_message"] = "error message:{}, error type:{},error code:{},payload:{}".format(str(e),error_attrib["error_type"],error_attrib["error_code"],payload)
             self.msg = error_attrib
@@ -104,7 +104,7 @@ class DataExtractor(FlinkStep):
                     extract_key = extract_key_for_list
 
                 if key == extract_key:
-                    current_dict[key] = DataExtractor.json_encode_decimal(new_value)
+                    current_dict[key] = Parsing.json_encode_decimal(new_value)
                     self._set_key_in_dict(current_dict, extract_key, extract_key_for_list,new_value, True)
         return current_dict
 

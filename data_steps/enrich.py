@@ -1,6 +1,6 @@
 import datetime
 import copy
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 import json
 
 
@@ -10,9 +10,9 @@ class EnrichError(StepError):
         self.msg = description
 
 
-class Enrich(FlinkStep):
-    def __init__(self,config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Enrich(BaseStep):
+    def __init__(self,config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
 
     def executer(self,message,payload):
         res = True

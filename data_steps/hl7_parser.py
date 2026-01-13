@@ -1,7 +1,7 @@
 import datetime
 import xml.etree.ElementTree as ET
 import copy
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 
 
 class HL7ParserError(StepError):
@@ -10,9 +10,9 @@ class HL7ParserError(StepError):
         self.msg = description
 
 
-class Hl7_input(FlinkStep):
-    def __init__(self, config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Hl7_input(BaseStep):
+    def __init__(self, config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.config = config
         self.hl7_src = None
         self.spliters = self.step_config["hl7_spliters"]
@@ -51,7 +51,7 @@ class Hl7_input(FlinkStep):
             self.msg = error_attrib
                     
     
-class HL7Parser(FlinkStep):
+class HL7Parser(BaseStep):
     def __init__(self,config,logger,step_order):
         super().__init__(config,logger,step_order)
         self.Hl7_input = Hl7_input(config,logger,step_order)

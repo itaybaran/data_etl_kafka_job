@@ -1,7 +1,7 @@
 import datetime
 import copy
 from utils.operator import Operator, OperatorError
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 
 
 class FilterError(StepError):
@@ -10,9 +10,9 @@ class FilterError(StepError):
         self.msg = description
 
 
-class Filter(FlinkStep):
-    def __init__(self,config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Filter(BaseStep):
+    def __init__(self,config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.filter_instructions = self.step_config["instuctions"]
 
     def executer(self,message,payload):

@@ -1,6 +1,6 @@
 import os
 import copy
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 from utils.state_manager import StateManager
 from utils.kafka_producer import ConfluentProducer
 
@@ -11,9 +11,9 @@ class ProduceError(StepError):
         self.msg = description
 
 
-class Produce(FlinkStep):
-    def __init__(self,config,env_config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Produce(BaseStep):
+    def __init__(self,config,env_config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.state = StateManager(self.step_config,env_config,logger)
         self.kafka_client_auth = {"bootstrap.servers": self.step_config["instructions"]["bootstrap.servers"],
                                   "security.protocol": self.step_config["instructions"]["security.protocol"]}

@@ -1,7 +1,7 @@
 import datetime
 import copy
 from utils.operator import Operator, OperatorError
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 from utils.state_manager import StateManager
 
 
@@ -11,9 +11,9 @@ class BindError(StepError):
         self.msg = description
 
 
-class Bind(FlinkStep):
-    def __init__(self,config,env_config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Bind(BaseStep):
+    def __init__(self,config,env_config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.state = StateManager(self.step_config,env_config,logger)
 
     def executer(self,message,payload):

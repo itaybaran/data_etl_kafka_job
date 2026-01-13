@@ -1,5 +1,5 @@
 #from utils.state_manager import StateManager
-from data_steps.data_extractor import DataExtractor 
+from data_steps.parsing import Parsing 
 from data_steps.hl7_parser import HL7Parser
 from data_steps.validator import Validator
 from data_steps.filter import Filter
@@ -8,6 +8,7 @@ from data_steps.explode import Explode
 from data_steps.add_attributes import AddAttributes
 from data_steps.bind import Bind
 from data_steps.produce import Produce
+from data_steps.flow_filter import FlowFilter
 
 class FlowManagerError:
     def __init__(self, description):
@@ -39,29 +40,30 @@ class FlowManager:
         for step_conf in steps_config:
             if step_conf["is_active"]:
                 step = self.create_step(step_conf["name"],step_conf["order"])
-                step.name = step_conf["name"]
                 step.order = step_conf["order"]
                 self.steps.append(step)
 
     def create_step(self,step_name,step_order):
         if str(step_name).lower() == "hl7_parser":
-            return HL7Parser(config=self.config, logger=self.logger,step_order=step_order)
-        elif str(step_name).lower() == "data_extractor":
-            return DataExtractor(config=self.config, logger=self.logger,step_order=step_order)
+            return HL7Parser(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
+        elif str(step_name).lower() == "parsing":
+            return Parsing(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "validator":
-            return Validator(config=self.config, logger=self.logger,step_order=step_order)
+            return Validator(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "filter":
-            return Filter(config=self.config, logger=self.logger,step_order=step_order)
+            return Filter(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "enrich":
-            return Enrich(config=self.config, logger=self.logger,step_order=step_order)
+            return Enrich(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "explode":
-            return Explode(config=self.config, logger=self.logger,step_order=step_order)
+            return Explode(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "add_attributes":
-            return AddAttributes(config=self.config, logger=self.logger,step_order=step_order)
+            return AddAttributes(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
+        elif str(step_name).lower() == "flow_filter":
+            return FlowFilter(config=self.config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "bind":
-            return Bind(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order)
+            return Bind(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
         elif str(step_name).lower() == "produce":
-            return Produce(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order)
+            return Produce(config=self.config, env_config = self.env_config, logger=self.logger,step_order=step_order,raise_event=self.raise_event)
 
     def execute_flow(self,data,payload):
         res = True
@@ -77,6 +79,16 @@ class FlowManager:
                         #self.msg = step.error_attrib 
                         return res
                     self.msg = step.msg
+            
+            elif step.name == "flow_filter":
+                res = step.execute(self.msg,payload)
+                if not res:
+                    #self.msg = step.error_attrib 
+                    return res
+                self.msg = step.msg
+                tag_filter =  step.instructions["sub_entity_id_field"]
+                self.filter_steps(tag_filter)
+               
             else:
                 res = step.execute(self.msg,payload)
                 if not res:
@@ -84,6 +96,12 @@ class FlowManager:
                     return res
                 self.msg = step.msg
         return res
+    
+    def raise_event(self):
+        pass
+
+    def filter_steps(self,field):
+        pass
 
 
 

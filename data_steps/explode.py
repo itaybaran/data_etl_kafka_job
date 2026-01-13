@@ -1,15 +1,15 @@
 
 import copy
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 
 class ExplodeError(StepError):
     def __init__(self, description):
         super().__init__()
         self.msg = description
 
-class Explode(FlinkStep):
-    def __init__(self,config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class Explode(BaseStep):
+    def __init__(self,config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.explode_instructions = self.step_config["instuctions"]
         self.exploded_messages = []
 

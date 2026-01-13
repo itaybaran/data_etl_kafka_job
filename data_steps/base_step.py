@@ -8,25 +8,20 @@ class StepError(Exception):
         self.msg = description
         self.order = order
 
-class FlinkStep:
-    def __init__(self,config,logger,step_order):
+class BaseStep:
+    def __init__(self,config,logger,step_order,raise_event):
         self.config = config
         self.logger = logger
         self.msg = []
         self.current_messages = []
-        self._name = None
         self.order = int(step_order)
         self.step_config = self.get_step_config()
+        self.filters = self.step_config["filter_flow"]
+        self.name = self.step_config["class"]
+        self.raise_event = raise_event
 
-    @property
-    def name(self):
-        # Getter
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        # Setter with validation
-        self._name = value
+    def raise_event(self): 
+        pass
 
     @property
     def order(self):
@@ -39,7 +34,7 @@ class FlinkStep:
         self._order = value
 
     def get_step_config(self):
-        for key in self.config["flink_steps"]:
+        for key in self.config["steps"]:
             if key["order"] == self.order:
                 return key
 

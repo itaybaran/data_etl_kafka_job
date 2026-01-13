@@ -2,12 +2,12 @@ import datetime
 import uuid
 import copy
 from utils.operator import Operator, OperatorError
-from data_steps.flink_step import FlinkStep, StepError
+from data_steps.base_step import BaseStep, StepError
 
 
-class AddAttributes(FlinkStep):
-    def __init__(self,config,logger,step_order):
-        super().__init__(config,logger,step_order)
+class AddAttributes(BaseStep):
+    def __init__(self,config,logger,step_order,raise_event):
+        super().__init__(config,logger,step_order,raise_event)
         self.add_attributes_instructions = self.step_config["instructions"]
 
     def executer(self,message,payload):
