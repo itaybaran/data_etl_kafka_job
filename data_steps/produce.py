@@ -14,7 +14,7 @@ class ProduceError(StepError):
 class Produce(BaseStep):
     def __init__(self,config,env_config,logger,step_order,raise_event):
         super().__init__(config,logger,step_order,raise_event)
-        self.state = StateManager(self.step_config,env_config,logger)
+        #self.state = StateManager(self.step_config,env_config,logger)
         self.kafka_client_auth = {"bootstrap.servers": self.step_config["instructions"]["bootstrap.servers"],
                                   "security.protocol": self.step_config["instructions"]["security.protocol"]}
         self.poducer = ConfluentProducer(self.step_config["instructions"]["topic"],self.step_config["instructions"]["batch_size"],self.kafka_client_auth)

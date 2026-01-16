@@ -43,7 +43,7 @@ def main():
         logger.insert_debug_to_log("main","end function")
     except Exception as e:
         logger.insert_error_to_log(-101,"Environment issue:{}".format(str(e)))
-
+        
 
 # Execute
 if __name__ == "__main__":

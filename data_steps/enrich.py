@@ -53,7 +53,8 @@ class Enrich(BaseStep):
             elif method == 'create_sub_entity':
                 seperator = self.step_config["seperator"]
                 values = self.build_parapm(msg,enrich_step)
-                if len(values) == len(enrich_step["base_fields"]):
+                temp = [value for value in values if value not in ("", None)]
+                if len(temp) == len(enrich_step["base_fields"]):
                     return enrich_step["sub_type_name"]
                 else:
                     if enrich_step["new_field"] in (msg):
@@ -96,5 +97,13 @@ class Enrich(BaseStep):
         for key in keys_arr:
             dict = dict[key]
         return dict
+    
+    def check_if_empty(self,arr):
+        temp=[]
+        for value in arr:
+            if not (value =="" or value is None):
+                temp.append(value)
+        return temp
+
 
     

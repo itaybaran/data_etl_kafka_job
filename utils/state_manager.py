@@ -35,9 +35,9 @@ class StateManager():
             self.current_message = {}
             self.root_message = {}
             self.save_key(message)
-            topic = message["metadata.topic"]
+            sub_entity_id = message["sub_entity_id"]
             self.seperator = self.main_config["seperator"]
-            parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
+            parts = list(filter(lambda part: part["sub_entity_id"]  == sub_entity_id, self.main_config["parts"]))
             part = parts[0]
             level = part["bind_info"]["level"]
             if level==1:
@@ -62,16 +62,16 @@ class StateManager():
     def save_key(self,message):
         res = True
         try:
-            topic = message["metadata.topic"]
+            sub_entity_id = message["sub_entity_id"]
             self.seperator = self.main_config["seperator"]
-            parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
+            parts = list(filter(lambda part: part["sub_entity_id"]  == sub_entity_id, self.main_config["parts"]))
             part = parts[0]
             key = part["key_field"]
             key = self.find_key(message,key,self.seperator)
             parent_key = part["bind_info"]["parent_key_field"]
             parent_key = self.find_key(message,parent_key,self.seperator)
             fragments = ["None"] * 3
-            fragments[0] = topic
+            fragments[0] = sub_entity_id
             fragments[1] = parent_key
             fragments[2] = key
             key_patern = ":".join(fragments)
@@ -132,7 +132,7 @@ class StateManager():
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in get_patern method, issue:{}".format(str(e)))
 
-    def find_related_topic(self,part,direction):
+    def find_related_part(self,part,direction):
         res = None
         try:
             if direction==-1:# direction=1 will look for parent node, direction=-1 will look for child node
@@ -143,9 +143,9 @@ class StateManager():
                 parts = list(filter(lambda part: part["name"]  == name, self.main_config["parts"]))
             return parts
         except StateError as e:
-            self.logger.insert_error_to_log(-301,"State error in find_related_topic method, issue:{}".format(str(e)))
+            self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
         except Exception as e:
-            self.logger.insert_error_to_log(-301,"State error in find_related_topic method, issue:{}".format(str(e)))
+            self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
 
     def combine_message(self,message,direction,recurse_level,flag):
         # direction=1 will look for parent node, direction=-1 will look for child node
@@ -154,15 +154,15 @@ class StateManager():
         self.entity_name = ""
         self.seperator = ""
         try:
-            topic = message["metadata.topic"]
+            sub_entity_id = message["sub_entity_id"]
             self.seperator = self.main_config["seperator"]
-            parts = list(filter(lambda part: part["topic"]  == topic, self.main_config["parts"]))
+            parts = list(filter(lambda part: part["sub_entity_id"]  == sub_entity_id, self.main_config["parts"]))
             part = parts[0]
             name =  part["name"]
             level = part["bind_info"]["level"]
-            self.logger.insert_debug_to_log("combine_message","incoming message topic:{}, recurse level:{}".format(part["topic"],recurse_level))
-            incoming_topic = self.incoming_message["metadata.topic"]
-            if incoming_topic==topic:
+            self.logger.insert_debug_to_log("combine_message","incoming message sub_entity_id:{}, recurse level:{}".format(part["sub_entity_id"],recurse_level))
+            incoming_sub_entity_id = self.incoming_message["sub_entity_id"]
+            if incoming_sub_entity_id==sub_entity_id:
                 self.current_message[name] = self.incoming_message
             else:
                 self.current_message[name] = message
@@ -175,11 +175,11 @@ class StateManager():
                     key = self.find_key(message,key,self.seperator)
                     parent_key = part["bind_info"]["parent_key_field"]
                     parent_key = self.find_key(message,parent_key,self.seperator)
-                    parts= self.find_related_topic(part=part,direction=direction)
+                    parts= self.find_related_part(part=part,direction=direction)
                     for part in parts:
                         level = part["bind_info"]["level"]
                         fragments = ["None"] * 3
-                        fragments[0] = part["topic"]
+                        fragments[0] = part["sub_entity_id"]
                         if direction == -1: # look for child node
                             fragments[1] = key
                             fragments[2] = "*"

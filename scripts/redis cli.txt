@@ -4,7 +4,7 @@ podman exec -it redis redis-cli
 AUTH ChangeMe123!
 
 # scan
-SCAN 0 MATCH user:* COUNT 100
+SCAN 0 MATCH * COUNT 100
 
 # get
 GET user:100
