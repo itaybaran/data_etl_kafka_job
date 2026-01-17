@@ -20,15 +20,19 @@ class Bind(BaseStep):
         res = True
         try:
             parsed_msg = copy.copy(message)
-            res = self.state.bind_entity(parsed_msg)
-            if res:
-                self.logger.logger.debug("Bind.executer, msg:{}".format(self.state.current_message))
-                self.current_messages.append(self.state.current_message)
+            if self.filter(parsed_msg):
+                res = self.state.bind_entity(parsed_msg)
+                if res:
+                    self.logger.logger.debug("Bind.executer, msg:{}".format(self.state.current_message))
+                    self.current_messages.append(self.state.current_message)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Bind.executer order:{}".format(self.order),"Filtered out") 
         except OperatorError as e:
             res = False
             error_attrib = {}
-            error_attrib["msg"] = "EnrichError Error {}".format(str(e))
-            error_attrib["error_type"] = "EnrichError"
+            error_attrib["msg"] = "BindError Error {}".format(str(e))
+            error_attrib["error_type"] = "BindError"
             error_attrib["error_code"] = self.logger.get_error_code(error_attrib["error_type"])
             error_attrib["error_message"] = "error message:{}, error type:{},error code:{},payload:{}".format(str(e),error_attrib["error_type"],error_attrib["error_code"],payload)
             self.msg = error_attrib

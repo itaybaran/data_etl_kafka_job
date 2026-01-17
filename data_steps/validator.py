@@ -17,10 +17,15 @@ class Validator(BaseStep):
     def executer(self,message,payload):
         res = True
         try:
-            self.msg = message
-            for token in self.validate_instructions:
-                Operator.validate_token(token,message)
-            self.current_messages.append(message)
+            parsed_msg = copy.copy(parsed_msg)
+            if self.filter(parsed_msg):
+                self.msg = parsed_msg
+                for token in self.validate_instructions:
+                    Operator.validate_token(token,parsed_msg)
+                self.current_messages.append(parsed_msg)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Validator.executer order:{}".format(self.order),"Filtered out")
         except AssertionError as e:
             res = False
             

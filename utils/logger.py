@@ -90,7 +90,7 @@ class Logger:
                   {"FilterError":4141},{"OperatorError":4151},
                   {"ExplodeError":4161},{"EnrichError":4171},
                    {"BindError":4181},{"ProduceError":4191},
-                   {"FlowFilterError":4201}]
+                   {"FlowFilterError":4201},{"AddAttributesError":4211}]
         for element in codes:
             for key in element:
                 if key == error_type:

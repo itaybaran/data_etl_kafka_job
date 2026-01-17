@@ -17,18 +17,24 @@ class Explode(BaseStep):
         res = True
         raw_mesages = []
         try:
-            key = message[self.explode_instructions["explode_key"]]
-            if not isinstance(key,list):
-                key = [key]
-            for element in key:
-                new_msg = copy.copy(message)
-                for new_field in self.explode_instructions["mapping"]:
-                    try:
-                        new_msg[new_field] = element[self.explode_instructions["mapping"][new_field]]
-                    except Exception as e:
-                        pass # implement scenario for error in message creation
-                del(new_msg[self.explode_instructions["explode_key"]])
-                self.current_messages.append(new_msg)
+            parsed_msg = copy.copy(message)
+            if self.filter(parsed_msg):
+                key = message[self.explode_instructions["explode_key"]]
+                if not isinstance(key,list):
+                    key = [key]
+                for element in key:
+                    new_msg = copy.copy(parsed_msg)
+                    for new_field in self.explode_instructions["mapping"]:
+                        try:
+                            new_msg[new_field] = element[self.explode_instructions["mapping"][new_field]]
+                        except Exception as e:
+                            pass # implement scenario for error in message creation
+                    del(new_msg[self.explode_instructions["explode_key"]])
+                    self.current_messages.append(new_msg)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Explode.executer order:{}".format(self.order),"Filtered out") 
+
         except ExplodeError as e:
             res = False
             error_attrib = {}

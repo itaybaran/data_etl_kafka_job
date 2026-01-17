@@ -16,12 +16,7 @@ class BaseStep:
         self.current_messages = []
         self.order = int(step_order)
         self.step_config = self.get_step_config()
-        self.filters = self.step_config["filter_flow"]
         self.name = self.step_config["class"]
-        self.raise_event = raise_event
-
-    def raise_event(self): 
-        pass
 
     @property
     def order(self):
@@ -52,8 +47,22 @@ class BaseStep:
     def executer(self,message,payload):
         pass
         
-
     def pre_execute(self,message,payload):
         pass
+    
+    def _find_key(self, dict, key_str, seperator):
+        keys_arr =str(key_str).split(sep=seperator)
+        for key in keys_arr:
+            dict = dict[key]
+        return dict
+    
+    def filter(self,msg):
+        filter_key = self.config["filters_key_in_message"]
+        if filter_key in msg:
+            filter = msg[filter_key]
+        else:
+            filter = "all"
+            msg[filter_key]=filter
+        return  filter in self.step_config["flow_filter"]
 
     

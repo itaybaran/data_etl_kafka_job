@@ -18,9 +18,13 @@ class Enrich(BaseStep):
         res = True
         try:
             parsed_msg = copy.copy(message)
-            for enrich_step in self.step_config["instuctions"]: 
-                parsed_msg[enrich_step["new_field"]]= self.calculate(parsed_msg,enrich_step)
-            self.current_messages.append(parsed_msg)
+            if self.filter(parsed_msg):
+                for enrich_step in self.step_config["instuctions"]: 
+                    parsed_msg[enrich_step["new_field"]]= self.calculate(parsed_msg,enrich_step)
+                self.current_messages.append(parsed_msg)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Enrich.executer order:{}".format(self.order),"Filtered out") 
         except EnrichError as e:
             res = False
             error_attrib = {}
@@ -90,13 +94,6 @@ class Enrich(BaseStep):
             self.logger.insert_debug_to_log("build_parapm",json.dumps(error_attrib))
         finally:
             return res
-        
-
-    def _find_key(self, dict, key_str, seperator):
-        keys_arr =str(key_str).split(sep=seperator)
-        for key in keys_arr:
-            dict = dict[key]
-        return dict
     
     def check_if_empty(self,arr):
         temp=[]

@@ -22,8 +22,13 @@ class Produce(BaseStep):
     def executer(self,message,payload):
         res = True
         try:
-            self.poducer.send(message)
-            self.current_messages.append(self.state.current_message)
+            parsed_msg = copy.copy(message)
+            if self.filter(parsed_msg):
+                self.poducer.send(message)
+                self.current_messages.append(self.state.current_message)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Produce.executer order:{}".format(self.order),"Filtered out")
         except ProduceError as e:
             res = False
             error_attrib = {}

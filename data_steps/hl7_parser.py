@@ -81,28 +81,33 @@ class HL7Parser(BaseStep):
 
     def executer(self,msg,payload):
         try:
-            res = True
-            self.response = {
-            "Hl7_input": {"hl7_src": self.Hl7_input.hl7_src, "hl7_data_model_code": self.Hl7_input.hl7_data_model_code,
-                          "attributes": self.Hl7_input.attributes}, "is_success": True, "error_code": None,
-            "error_msg": "", "hl7_key": self.Hl7_input.hl7_key}
-            data = {}
-            spliters = copy.copy(self.Hl7_input.spliters)
-            hl7_rows = self.Hl7_input.split_rows([self.Hl7_input.hl7_src],spliters,False)[1:]
-            for row in hl7_rows:
-                pipe_pos = 0
-                pipes = str(row).split("|")
-                pipe_id = pipes[0]
-                data[pipe_id] = {}
-                for pipe in pipes:
-                    hut_pos = 1
-                    for hut in str(pipe).split("^"):
-                        key = "{}_{}_{}".format(pipe_id, pipe_pos, hut_pos)
-                        data[pipe_id][key] = hut
-                        hut_pos += 1
-                    pipe_pos += 1
-            self.msg = data
-            msg = self.msg
+            parsed_msg = copy.copy(msg)
+            if self.filter(parsed_msg):
+                res = True
+                self.response = {
+                "Hl7_input": {"hl7_src": self.Hl7_input.hl7_src, "hl7_data_model_code": self.Hl7_input.hl7_data_model_code,
+                            "attributes": self.Hl7_input.attributes}, "is_success": True, "error_code": None,
+                "error_msg": "", "hl7_key": self.Hl7_input.hl7_key}
+                data = {}
+                spliters = copy.copy(self.Hl7_input.spliters)
+                hl7_rows = self.Hl7_input.split_rows([self.Hl7_input.hl7_src],spliters,False)[1:]
+                for row in hl7_rows:
+                    pipe_pos = 0
+                    pipes = str(row).split("|")
+                    pipe_id = pipes[0]
+                    data[pipe_id] = {}
+                    for pipe in pipes:
+                        hut_pos = 1
+                        for hut in str(pipe).split("^"):
+                            key = "{}_{}_{}".format(pipe_id, pipe_pos, hut_pos)
+                            data[pipe_id][key] = hut
+                            hut_pos += 1
+                        pipe_pos += 1
+                self.msg = data
+                msg = self.msg
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("HL7Parser.executer order:{}".format(self.order),"Filtered out")
         except Exception as e:
             res = False
             error_attrib = {}

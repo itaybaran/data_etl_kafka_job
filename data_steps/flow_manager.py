@@ -79,15 +79,6 @@ class FlowManager:
                         #self.msg = step.error_attrib 
                         return res
                     self.msg = step.msg
-            
-            elif step.name == "flow_filter":
-                res = step.execute(self.msg,payload)
-                if not res:
-                    #self.msg = step.error_attrib 
-                    return res
-                self.msg = step.msg
-                tag_filter =  step.instructions["sub_entity_id_field"]
-                self.filter_steps(tag_filter)
                
             else:
                 res = step.execute(self.msg,payload)

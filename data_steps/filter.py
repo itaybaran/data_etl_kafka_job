@@ -18,9 +18,14 @@ class Filter(BaseStep):
     def executer(self,message,payload):
         res = True
         try:
-            for token in self.filter_instructions:
-                if Operator.check_operator(token,message):
-                    self.current_messages.append(message)
+            parsed_msg = copy.copy(message)
+            if self.filter(parsed_msg):
+                for token in self.filter_instructions:
+                    if Operator.check_operator(token,parsed_msg):
+                        self.current_messages.append(parsed_msg)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Filter.executer order:{}".format(self.order),"Filtered out")
         except OperatorError as e:
             res = False
             error_attrib = {}

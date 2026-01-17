@@ -14,16 +14,20 @@ class AddAttributes(BaseStep):
         res = True
         try:
             active_msg = copy.copy(message)
-            for attribute in self.add_attributes_instructions:
-                if attribute == "DateTimeKafkaData" and self.add_attributes_instructions[attribute]:
-                    active_msg["DateTimeKafkaData"] = str(datetime.datetime.now())
-                elif attribute == "MessageIdKafkaData" and self.add_attributes_instructions[attribute]:
-                    active_msg["MessageIdKafkaData"] = str(uuid.uuid4())
-                elif attribute == "RowNum" and self.add_attributes_instructions[attribute]:
-                    active_msg["RowNum"] = len(self.current_messages) + 1
-                elif attribute == "MaxRowNum" and self.add_attributes_instructions[attribute]:
-                    active_msg["MaxRowNum"] = len(self.msg)
-            self.current_messages.append(active_msg)           
+            if self.filter(message):
+                for attribute in self.add_attributes_instructions:
+                    if attribute == "DateTimeKafkaData" and self.add_attributes_instructions[attribute]:
+                        active_msg["DateTimeKafkaData"] = str(datetime.datetime.now())
+                    elif attribute == "MessageIdKafkaData" and self.add_attributes_instructions[attribute]:
+                        active_msg["MessageIdKafkaData"] = str(uuid.uuid4())
+                    elif attribute == "RowNum" and self.add_attributes_instructions[attribute]:
+                        active_msg["RowNum"] = len(self.current_messages) + 1
+                    elif attribute == "MaxRowNum" and self.add_attributes_instructions[attribute]:
+                        active_msg["MaxRowNum"] = len(self.msg)
+                self.current_messages.append(active_msg)    
+            else:
+                self.current_messages.append(active_msg)
+                self.logger.insert_debug_to_log("AddAttributes.executer order:{}".format(self.order),"Filtered out")       
 
         except Exception as e:
             res = False

@@ -16,6 +16,7 @@ class FlowFilter(BaseStep):
         super().__init__(config,logger,step_order,raise_event)
         self.instructions = self.step_config["instructions"]
         self.raise_event = raise_event
+        self.seperator = self.step_config["seperator"]
 
     def raise_event(self):
         return self.instructions["sub_entity_id_field"]
@@ -26,14 +27,19 @@ class FlowFilter(BaseStep):
         res = True
         try:
             parsed_msg = copy.copy(message)
-            filter_by = self.instructions["sub_entity_id_field"]
-            token = []
-            token.append(filter_by) # field:0
-            token.append("nnull")# rule:1
-            token.append(True)# is constant:2
-            token.append("")# constant value:3
-            Operator.validate_token(token=token,message=parsed_msg)
-            self.current_messages.append(parsed_msg)
+            if self.filter(parsed_msg):
+                filter_by = self.instructions["sub_entity_id_field"]
+                token = []
+                token.append(filter_by) # field:0
+                token.append("nnull")# rule:1
+                token.append(True)# is constant:2
+                token.append("")# constant value:3
+                Operator.validate_token(token=token,message=parsed_msg)
+                parsed_msg[self.config["filters_key_in_message"]]=self._find_key(parsed_msg,filter_by, self.seperator)
+                self.current_messages.append(parsed_msg)
+            else:
+                self.current_messages.append(parsed_msg)
+                self.logger.insert_debug_to_log("Filter.executer order:{}".format(self.order),"Filtered out")
         except Exception as e:
             res = False
             error_attrib = {}

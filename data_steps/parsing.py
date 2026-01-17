@@ -15,15 +15,20 @@ class Parsing(BaseStep):
 
     def executer(self,msg,payload):
         try:
-            res = True
-            self._load_values(msg)
-            parsed_msg = copy.copy(self.step_config['data_message'])
-            for key in self.values_dict:
-                try:
-                    parsed_msg = self._set_key_in_dict(parsed_msg, key, key, self.values_dict[key], False)
-                except Exception as e:
-                    pass #collect the error as a metric
-            self.current_messages.append(parsed_msg)    
+            current_message = copy.copy(msg)
+            if self.filter(current_message):
+                res = True
+                self._load_values(current_message)
+                parsed_msg = copy.copy(self.step_config['data_message'])
+                for key in self.values_dict:
+                    try:
+                        parsed_msg = self._set_key_in_dict(parsed_msg, key, key, self.values_dict[key], False)
+                    except Exception as e:
+                        pass #collect the error as a metric
+                self.current_messages.append(parsed_msg)
+            else:
+                self.current_messages.append(current_message)
+                self.logger.insert_debug_to_log("Parse.executer order:{}".format(self.order),"Filtered out")    
         except Exception as e:
             res = False
             error_attrib = {}
@@ -78,22 +83,6 @@ class Parsing(BaseStep):
             res = res + "," + dict[key]
         if len(res) > 1:
             return res[1:]
-
-    def _find_key_(self, dict, extract_key, res):
-        if len(res.keys()) == 0:
-            for key in dict:
-                if type(dict[key]) == type({}):
-                    self._find_key_(dict[key], extract_key, res)
-                if key == extract_key:
-                    res[key] = dict[key]
-                    self._find_key_(dict[key], extract_key, res)
-        return res
-    
-    def _find_key(self, dict, key_str, seperator):
-        keys_arr =str(key_str).split(sep=seperator)
-        for key in keys_arr:
-            dict = dict[key]
-        return dict
     
     def _set_key_in_dict(self, current_dict, extract_key, extract_key_for_list, new_value, to_stop):
         if not to_stop:

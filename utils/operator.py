@@ -1,4 +1,4 @@
-from data_steps.base_step import BaseStep, StepError
+from data_steps.base_step import StepError
 from utils.configuration_error import ConfigurationError
 
 class OperatorError(StepError):
