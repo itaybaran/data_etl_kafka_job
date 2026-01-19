@@ -21,10 +21,13 @@ class Bind(BaseStep):
         try:
             parsed_msg = copy.copy(message)
             if self.filter(parsed_msg):
+                count_itterations = 0 
+                # in case the message is a parent message we will need to loop all existing childs and send them to target topic if needed
                 res = self.state.bind_entity(parsed_msg)
                 if res:
-                    self.logger.logger.debug("Bind.executer, msg:{}".format(self.state.current_message))
-                    self.current_messages.append(self.state.current_message)
+                    for message in self.state.messages_2_produce:
+                        self.logger.logger.debug("Bind.executer, msg:{}".format(message))
+                        self.current_messages.append(message)
             else:
                 self.current_messages.append(parsed_msg)
                 self.logger.insert_debug_to_log("Bind.executer order:{}".format(self.order),"Filtered out") 
