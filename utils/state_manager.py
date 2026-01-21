@@ -52,8 +52,6 @@ class StateManager():
             if bind_ready:
                 self.combine_message(message=self.root_message,direction=-1,recurse_level=1,flag=True)
                 bind_ready = self.is_bind_ready()
-                if bind_ready:
-                    self.tag_sent_messages()
             return bind_ready
 
         except StateError as e:
@@ -93,24 +91,39 @@ class StateManager():
                 # all sub entities must exist
                 if not part["name"] in self.current_message:
                     return False
+            self.save_4_produce(self.current_message)
             return True
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e))) 
 
-    def tag_sent_messages(self):
+    def tag_sent_messages(self,message):
         try:
             parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
             for part in parts:
-                msg = self.current_message[part["name"]]
-                msg["metadata.sent"] = True
-                self.save_key(msg)
+                sub_entity = message[part["name"]]
+                sub_entity["metadata.sent"] = True
+                self.save_key(sub_entity)
             return True
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))  
+
+    def save_4_produce(self,message):
+        try:
+            current_message = copy.copy(message)
+            parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
+            for part in parts:
+                sub_entity = message[part["name"]]
+                if not sub_entity["metadata.sent"]:
+                    self.messages_2_produce.append(current_message)
+            return True
+        except StateError as e:
+            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
+        except Exception as e:
+            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e))) 
 
     def find_key(self, dict, key_str, seperator):
         res = None
@@ -150,21 +163,6 @@ class StateManager():
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
 
-    def save_4_produce(self,part,message,bind_message):
-        res = None
-        try:
-            # collect all messages the need to be send in case the leaf messages arived before parent mesage
-            # in this case more than one messages can be send
-            # will not send again if the message is a leaf object that allready been sent (tag_after_sent = False)
-            if "tag_after_sent" in part:
-                if part["tag_after_sent"]:
-                    if not message["metadata.sent"]:
-                        current_message = copy.copy(bind_message)
-                        self.messages_2_produce.append(current_message)
-        except StateError as e:
-            self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
-        except Exception as e:
-            self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
 
     def combine_message(self,message,direction,recurse_level,flag):
         # direction=1 will look for parent node, direction=-1 will look for child node
@@ -185,7 +183,6 @@ class StateManager():
                 self.current_message[name] = self.incoming_message
             else:
                 self.current_message[name] = message
-            self.save_4_produce(part=part,message=message,bind_message=self.current_message)
 
             if flag:
                 if level == 1 and direction==1:

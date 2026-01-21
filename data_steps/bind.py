@@ -27,6 +27,7 @@ class Bind(BaseStep):
                 if res:
                     for message in self.state.messages_2_produce:
                         self.logger.logger.debug("Bind.executer, msg:{}".format(message))
+                        self.state.tag_sent_messages(message)
                         self.current_messages.append(message)
             else:
                 self.current_messages.append(parsed_msg)
