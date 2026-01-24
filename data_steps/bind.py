@@ -17,20 +17,22 @@ class Bind(BaseStep):
         self.state = StateManager(self.step_config,env_config,logger)
 
     def executer(self,message,payload):
-        res = True
+        res = False
         try:
             parsed_msg = copy.copy(message)
             if self.filter(parsed_msg):
                 count_itterations = 0 
                 # in case the message is a parent message we will need to loop all existing childs and send them to target topic if needed
-                res = self.state.bind_entity(parsed_msg)
-                if res:
-                    for message in self.state.messages_2_produce:
-                        self.logger.logger.debug("Bind.executer, msg:{}".format(message))
-                        self.state.tag_sent_messages(message)
-                        self.current_messages.append(message)
+                bind_check = self.state.bind_entity(parsed_msg)
+                if bind_check:
+                    for key in self.state.messages_2_produce:
+                        res = True
+                        self.logger.logger.debug("Bind.executer, msg:{}".format(self.state.messages_2_produce[key]))
+                        self.state.tag_sent_messages(self.state.messages_2_produce[key])
+                        self.current_messages.append(self.state.messages_2_produce[key])
+                    
             else:
-                self.current_messages.append(parsed_msg)
+                self.current_messages.append(message)
                 self.logger.insert_debug_to_log("Bind.executer order:{}".format(self.order),"Filtered out") 
         except OperatorError as e:
             res = False

@@ -20,7 +20,7 @@ class StateManager():
         self.root_message = {}
         self.incoming_message = {}
         self.current_message = {}
-        self.messages_2_produce=[]
+        self.messages_2_produce={}
         self.state = redis.Redis(
             host=env_config["REDIS_HOST"],     # container name on devnet
             port=env_config["REDIS_PORT"],
@@ -35,7 +35,7 @@ class StateManager():
             self.incoming_message = message
             self.current_message = {}
             self.root_message = {}
-            self.messages_2_produce=[]
+            self.messages_2_produce={}
             self.save_key(message)
             sub_entity_id = message["sub_entity_id"]
             self.seperator = self.main_config["seperator"]
@@ -47,10 +47,10 @@ class StateManager():
                 self.root_message = message
                 bind_ready=True
             elif level>1:
-                self.combine_message(message=message,direction=1,recurse_level=1,flag=True)
+                self.combine_message(message=message,direction=1,recurse_level=1)
                 bind_ready = self.root_message != {}
             if bind_ready:
-                self.combine_message(message=self.root_message,direction=-1,recurse_level=1,flag=True)
+                self.combine_message(message=self.root_message,direction=-1,recurse_level=1)
                 bind_ready = self.is_bind_ready()
             return bind_ready
 
@@ -91,7 +91,6 @@ class StateManager():
                 # all sub entities must exist
                 if not part["name"] in self.current_message:
                     return False
-            self.save_4_produce(self.current_message)
             return True
         except StateError as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
@@ -111,19 +110,21 @@ class StateManager():
         except Exception as e:
             self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))  
 
-    def save_4_produce(self,message):
+    def save_4_produce(self,current_message,bind_message):
         try:
-            current_message = copy.copy(message)
-            parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
-            for part in parts:
-                sub_entity = message[part["name"]]
-                if not sub_entity["metadata.sent"]:
-                    self.messages_2_produce.append(current_message)
-            return True
+            if self.is_bind_ready():
+                bind_message = copy.copy(bind_message)
+                parts = list(filter(lambda part: part["tag_after_sent"], self.main_config["parts"]))
+                parts = list(filter(lambda part: part["sub_entity_id"]==current_message["sub_entity_id"], parts))
+                for part in parts:
+                    if not current_message["metadata.sent"]:
+                        field_key = part["key_field"]
+                        key = self.find_key(current_message,field_key,self.seperator)
+                        self.messages_2_produce[key] = bind_message
         except StateError as e:
-            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e)))
+            self.logger.insert_error_to_log(-301,"State error in save_4_produce method, issue:{}".format(str(e)))
         except Exception as e:
-            self.logger.insert_error_to_log(-301,"State error in is_bind_ready method, issue:{}".format(str(e))) 
+            self.logger.insert_error_to_log(-301,"State error in save_4_produce method, issue:{}".format(str(e))) 
 
     def find_key(self, dict, key_str, seperator):
         res = None
@@ -164,7 +165,7 @@ class StateManager():
             self.logger.insert_error_to_log(-301,"State error in find_related_part method, issue:{}".format(str(e)))
 
 
-    def combine_message(self,message,direction,recurse_level,flag):
+    def combine_message(self,message,direction,recurse_level):
         # direction=1 will look for parent node, direction=-1 will look for child node
         res = None
         self.key = None
@@ -183,35 +184,31 @@ class StateManager():
                 self.current_message[name] = self.incoming_message
             else:
                 self.current_message[name] = message
-
-            if flag:
-                if level == 1 and direction==1:
-                    self.root_message = message
-                    self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=False)
-                key = part["key_field"]
-                key = self.find_key(message,key,self.seperator)
-                parent_key = part["bind_info"]["parent_key_field"]
-                parent_key = self.find_key(message,parent_key,self.seperator)
-                parts= self.find_related_part(part=part,direction=direction)
-                for part in parts:
-                    level = part["bind_info"]["level"]
-                    fragments = ["None"] * 3
-                    fragments[0] = part["sub_entity_id"]
-                    if direction == -1: # look for child node
-                        fragments[1] = key
-                        fragments[2] = "*"
-                    elif direction == 1: # look for parent node
-                        fragments[1] = "*"
-                        fragments[2] = parent_key
-                    search_patern = self.get_patern(fragments=fragments)
-                    cur_flag = False # set flag to Flase in case there are no needed relatives
-                    for key_exists in self.state.scan_iter(match=search_patern, count=100):
-                        cur_flag = True # set flag to True after finding relatives
-                        entity = self.state.get(key_exists)
-                        message = json.loads(entity)
-                        self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=flag)
-                    if not cur_flag:
-                        self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1,flag=False)
+            # prepare for creating a data resource if needed
+            self.save_4_produce(current_message=message,bind_message=self.current_message)
+            if level == 1 and direction==1:
+                self.root_message = message
+                self.combine_message(message=message,direction=-1,recurse_level=recurse_level+1)
+            key = part["key_field"]
+            key = self.find_key(message,key,self.seperator)
+            parent_key = part["bind_info"]["parent_key_field"]
+            parent_key = self.find_key(message,parent_key,self.seperator)
+            parts= self.find_related_part(part=part,direction=direction)
+            for part in parts:
+                level = part["bind_info"]["level"]
+                fragments = ["None"] * 3
+                fragments[0] = part["sub_entity_id"]
+                if direction == -1: # look for child node
+                    fragments[1] = key
+                    fragments[2] = "*"
+                elif direction == 1: # look for parent node
+                    fragments[1] = "*"
+                    fragments[2] = parent_key
+                search_patern = self.get_patern(fragments=fragments)
+                for key_exists in self.state.scan_iter(match=search_patern, count=100):
+                    entity = self.state.get(key_exists)
+                    message = json.loads(entity)
+                    self.combine_message(message=message,direction=direction,recurse_level=recurse_level+1)
 
 
         except StateError as e:
